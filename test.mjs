@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { appendFile, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { apply, Config, __private__, inject, name } from './index.js'
@@ -80,8 +80,22 @@ try {
   const filtered = await tool.execute({ action: 'list', status: 'verified', limit: 10 })
   check('list filters by status', filtered.count === 1 && filtered.entries[0].kind === 'test')
 
+  const byKind = await tool.execute({ action: 'list', kind: 'decision', limit: 10 })
+  check('list filters by kind', byKind.count === 1 && byKind.entries[0].kind === 'decision')
+
+  const byTag = await tool.execute({ action: 'list', tag: 'CI', limit: 10 })
+  check('list filters tags case-insensitively', byTag.count === 1 && byTag.entries[0].kind === 'test')
+
+  threw = false
+  try { await tool.execute({ action: 'list', kind: 'unknown' }) } catch { threw = true }
+  check('list rejects an unknown kind', threw)
+
   const raw = await readFile(join(workspace, '.dsh/test-ledger.jsonl'), 'utf8')
   check('ledger is newline-delimited JSON', raw.trim().split('\n').length === 3)
+
+  await appendFile(join(workspace, '.dsh/test-ledger.jsonl'), '{"legacy":true}\n', 'utf8')
+  const legacySafe = await tool.execute({ action: 'list', tag: 'ci', limit: 10 })
+  check('list tolerates a valid legacy row without tags', legacySafe.count === 1)
 
   threw = false
   try { await tool.execute({ action: 'record', claim: '', evidence: 'x' }) } catch { threw = true }

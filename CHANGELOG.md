@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 - 2026-08-24
+
+- Add exact `kind`, `status`, and `tag` filters to `evidence_ledger` list queries.
+- Add coverage for filtered evidence retrieval and invalid kinds.
+
 ## 0.1.0 - 2026-08-24
 
 - Add the local append-only `evidence_ledger` tool.

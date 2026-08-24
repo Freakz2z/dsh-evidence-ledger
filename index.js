@@ -73,10 +73,29 @@ function normalizeTags(value) {
   return value.map((tag, index) => requireText(tag, `tags[${index}]`))
 }
 
-function matches(entry, query, status) {
+function normalizeKind(value) {
+  if (value === undefined) return undefined
+  if (!KINDS.includes(value)) throw new Error(`kind must be one of: ${KINDS.join(', ')}`)
+  return value
+}
+
+function normalizeStatus(value) {
+  if (value === undefined) return undefined
+  if (!STATUSES.includes(value)) throw new Error(`status must be one of: ${STATUSES.join(', ')}`)
+  return value
+}
+
+function entryTags(entry) {
+  return Array.isArray(entry.tags) ? entry.tags.filter(value => typeof value === 'string') : []
+}
+
+function matches(entry, query, status, kind, tag) {
   if (status !== undefined && entry.status !== status) return false
+  if (kind !== undefined && entry.kind !== kind) return false
+  const tags = entryTags(entry)
+  if (tag !== undefined && !tags.some(value => value.toLowerCase() === tag)) return false
   if (query === undefined || query === '') return true
-  const haystack = [entry.claim, entry.evidence, entry.source ?? '', ...entry.tags].join('\n').toLowerCase()
+  const haystack = [entry.claim ?? '', entry.evidence ?? '', entry.source ?? '', ...tags].join('\n').toLowerCase()
   return haystack.includes(query.toLowerCase())
 }
 
@@ -107,10 +126,8 @@ async function readEntries(filePath) {
 async function record(filePath, args) {
   const claim = requireText(args.claim, 'claim')
   const evidence = requireText(args.evidence, 'evidence')
-  const kind = args.kind ?? 'fact'
-  if (!KINDS.includes(kind)) throw new Error(`kind must be one of: ${KINDS.join(', ')}`)
-  const status = args.status ?? 'observed'
-  if (!STATUSES.includes(status)) throw new Error(`status must be one of: ${STATUSES.join(', ')}`)
+  const kind = normalizeKind(args.kind) ?? 'fact'
+  const status = normalizeStatus(args.status) ?? 'observed'
   const tags = normalizeTags(args.tags) ?? []
   const source = args.source === undefined ? undefined : requireText(args.source, 'source')
   const entry = {
@@ -136,13 +153,12 @@ async function record(filePath, args) {
 
 async function list(filePath, args, configuredLimit) {
   const query = args.query === undefined ? undefined : requireText(args.query, 'query').toLowerCase()
-  const status = args.status
-  if (status !== undefined && !STATUSES.includes(status)) {
-    throw new Error(`status must be one of: ${STATUSES.join(', ')}`)
-  }
+  const status = normalizeStatus(args.status)
+  const kind = normalizeKind(args.kind)
+  const tag = args.tag === undefined ? undefined : requireText(args.tag, 'tag').toLowerCase()
   const limit = normalizeLimit(args.limit, configuredLimit)
   const { entries, malformed } = await readEntries(filePath)
-  const matched = entries.filter(entry => matches(entry, query, status)).slice(-limit).reverse()
+  const matched = entries.filter(entry => matches(entry, query, status, kind, tag)).slice(-limit).reverse()
   return {
     action: 'list',
     path: displayPath(filePath),
@@ -198,6 +214,7 @@ export function apply(ctx, config) {
         source: { type: 'string', description: 'optional command, file, commit, URL, or other provenance pointer' },
         tags: { type: 'array', items: { type: 'string' }, description: 'optional searchable tags' },
         query: { type: 'string', description: 'case-insensitive text search across claim, evidence, source, and tags' },
+        tag: { type: 'string', description: 'case-insensitive exact tag filter for list' },
         limit: { type: 'number', description: 'maximum number of list results, from 1 to 100' },
       },
       required: ['action'],

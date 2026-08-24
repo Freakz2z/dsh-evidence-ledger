@@ -38,9 +38,23 @@ Search recent entries:
 }
 ```
 
+Results can also be narrowed by kind, status, or an exact tag:
+
+```json
+{
+  "action": "list",
+  "kind": "test",
+  "status": "verified",
+  "tag": "ci",
+  "limit": 20
+}
+```
+
 Supported `kind` values: `fact`, `test`, `decision`, `failure`, and `note`.
 
 Supported `status` values: `observed`, `verified`, `rejected`, and `pending`.
+
+The `list` filters for `kind`, `status`, and `tag` are exact; `query` remains a case-insensitive full-text search across claims, evidence, sources, and tags.
 
 Keep observed evidence separate from unverified judgment. The plugin does not decide whether a claim is true; it preserves the supplied evidence and makes its provenance searchable.
 

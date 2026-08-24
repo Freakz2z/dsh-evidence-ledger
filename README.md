@@ -38,9 +38,23 @@ dsh plugin --profile demo add github:Freakz2z/dsh-evidence-ledger
 }
 ```
 
+也可以按类型、状态或标签缩小结果：
+
+```json
+{
+  "action": "list",
+  "kind": "test",
+  "status": "verified",
+  "tag": "ci",
+  "limit": 20
+}
+```
+
 支持的 `kind`：`fact`、`test`、`decision`、`failure`、`note`。
 
 支持的 `status`：`observed`、`verified`、`rejected`、`pending`。
+
+`list` 的 `kind`、`status` 和 `tag` 是精确筛选；`query` 仍会在声明、证据、来源和标签中进行不区分大小写的全文搜索。
 
 记录内容应区分“已经看到的证据”和“尚未验证的判断”。插件不会替 agent 判断一条声明是否真实，只负责保存原始记录并提供可检索的来源指针。
 
