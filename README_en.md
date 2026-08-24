@@ -7,10 +7,10 @@ The plugin gives a DSH agent one `evidence_ledger` tool for recording facts, tes
 ## Install
 
 ```sh
-dsh plugin --profile demo add dsh-evidence-ledger
+dsh plugin --profile demo add github:Freakz2z/dsh-evidence-ledger
 ```
 
-The bundle is activated automatically after installation. Once installed, the agent can use `evidence_ledger` to record or search evidence.
+The bundle is activated automatically after installation. Once the npm package is published, `dsh-evidence-ledger` can be used as the install spec as well. The agent can then use `evidence_ledger` to record or search evidence.
 
 ## Tool usage
 

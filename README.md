@@ -7,10 +7,10 @@
 ## 安装
 
 ```sh
-dsh plugin --profile demo add dsh-evidence-ledger
+dsh plugin --profile demo add github:Freakz2z/dsh-evidence-ledger
 ```
 
-安装 bundle 后，插件会自动加入 profile。也可以把插件包安装到现有 profile，随后用 `evidence_ledger` 工具记录或检索证据。
+安装 bundle 后，插件会自动加入 profile。npm 包发布后也可以使用 `dsh-evidence-ledger` 作为安装 spec；随后用 `evidence_ledger` 工具记录或检索证据。
 
 ## 工具用法
 
