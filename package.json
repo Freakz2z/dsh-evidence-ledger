@@ -1,0 +1,51 @@
+{
+  "name": "dsh-evidence-ledger",
+  "version": "0.1.0",
+  "description": "Local append-only evidence ledger for DeepSeek Harness",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Freakz2z/dsh-evidence-ledger.git"
+  },
+  "homepage": "https://github.com/Freakz2z/dsh-evidence-ledger#readme",
+  "bugs": {
+    "url": "https://github.com/Freakz2z/dsh-evidence-ledger/issues"
+  },
+  "keywords": [
+    "deepseek",
+    "dsh",
+    "plugin",
+    "evidence",
+    "provenance",
+    "ai-native"
+  ],
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "README.md",
+    "README_en.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node test.mjs",
+    "test:composition": "node composition-test.mjs",
+    "pack:check": "npm pack --dry-run"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
