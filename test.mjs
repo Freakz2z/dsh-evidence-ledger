@@ -97,6 +97,10 @@ try {
   const legacySafe = await tool.execute({ action: 'list', tag: 'ci', limit: 10 })
   check('list tolerates a valid legacy row without tags', legacySafe.count === 1)
 
+  const overview = await tool.execute({ action: 'summary', status: 'verified' })
+  check('summary counts filtered entries by kind and status', overview.count === 1 && overview.byKind.test === 1 && overview.byStatus.verified === 1)
+  check('summary exposes the latest matching entry', overview.latest?.claim === 'The package test suite passes.')
+
   threw = false
   try { await tool.execute({ action: 'record', claim: '', evidence: 'x' }) } catch { threw = true }
   check('record rejects an empty claim', threw)

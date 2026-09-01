@@ -70,7 +70,7 @@ const BASE = [
     check('all entries loaded', unloaded.length === 0)
     const tool = context.tools.schemas().find(candidate => candidate.name === 'evidence_ledger')
     check('evidence tool is registered by the real loader', tool !== undefined)
-    check('tool exposes record and list actions', tool?.parameters?.properties?.action?.enum?.join(',') === 'record,list')
+    check('tool exposes record, list, and summary actions', tool?.parameters?.properties?.action?.enum?.join(',') === 'record,list,summary')
   } finally {
     await context.fiber.dispose()
     await rm(root, { recursive: true, force: true })

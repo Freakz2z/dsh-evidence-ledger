@@ -50,11 +50,22 @@ Results can also be narrowed by kind, status, or an exact tag:
 }
 ```
 
+Use `summary` when you need a quick distribution of the ledger:
+
+```json
+{
+  "action": "summary",
+  "status": "verified"
+}
+```
+
 Supported `kind` values: `fact`, `test`, `decision`, `failure`, and `note`.
 
 Supported `status` values: `observed`, `verified`, `rejected`, and `pending`.
 
 The `list` filters for `kind`, `status`, and `tag` are exact; `query` remains a case-insensitive full-text search across claims, evidence, sources, and tags.
+
+`summary` accepts the same filters and returns the matching total, counts grouped by `kind` and `status`, and the latest matching entry.
 
 Keep observed evidence separate from unverified judgment. The plugin does not decide whether a claim is true; it preserves the supplied evidence and makes its provenance searchable.
 

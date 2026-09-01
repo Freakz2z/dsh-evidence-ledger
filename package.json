@@ -1,6 +1,6 @@
 {
   "name": "dsh-evidence-ledger",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Local append-only evidence ledger for DeepSeek Harness",
   "license": "MIT",
   "type": "module",

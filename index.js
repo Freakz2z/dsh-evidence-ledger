@@ -8,6 +8,7 @@ const DEFAULT_MAX_RESULTS = 20
 const MAX_RESULTS = 100
 const MAX_TEXT_LENGTH = 4000
 const MAX_TAGS = 8
+const ACTIONS = ['record', 'list', 'summary']
 const STATUSES = ['observed', 'verified', 'rejected', 'pending']
 const KINDS = ['fact', 'test', 'decision', 'failure', 'note']
 
@@ -99,6 +100,15 @@ function matches(entry, query, status, kind, tag) {
   return haystack.includes(query.toLowerCase())
 }
 
+function normalizeFilters(args) {
+  return {
+    query: args.query === undefined ? undefined : requireText(args.query, 'query').toLowerCase(),
+    status: normalizeStatus(args.status),
+    kind: normalizeKind(args.kind),
+    tag: args.tag === undefined ? undefined : requireText(args.tag, 'tag').toLowerCase(),
+  }
+}
+
 async function readEntries(filePath) {
   let content
   try {
@@ -152,10 +162,7 @@ async function record(filePath, args) {
 }
 
 async function list(filePath, args, configuredLimit) {
-  const query = args.query === undefined ? undefined : requireText(args.query, 'query').toLowerCase()
-  const status = normalizeStatus(args.status)
-  const kind = normalizeKind(args.kind)
-  const tag = args.tag === undefined ? undefined : requireText(args.tag, 'tag').toLowerCase()
+  const { query, status, kind, tag } = normalizeFilters(args)
   const limit = normalizeLimit(args.limit, configuredLimit)
   const { entries, malformed } = await readEntries(filePath)
   const matched = entries.filter(entry => matches(entry, query, status, kind, tag)).slice(-limit).reverse()
@@ -169,9 +176,41 @@ async function list(filePath, args, configuredLimit) {
   }
 }
 
+async function summary(filePath, args) {
+  const { query, status, kind, tag } = normalizeFilters(args)
+  const { entries, malformed } = await readEntries(filePath)
+  const matched = entries.filter(entry => matches(entry, query, status, kind, tag))
+  const byKind = Object.fromEntries(KINDS.map(value => [value, 0]))
+  const byStatus = Object.fromEntries(STATUSES.map(value => [value, 0]))
+  for (const entry of matched) {
+    if (Object.hasOwn(byKind, entry.kind)) byKind[entry.kind]++
+    if (Object.hasOwn(byStatus, entry.status)) byStatus[entry.status]++
+  }
+  return {
+    action: 'summary',
+    path: displayPath(filePath),
+    count: matched.length,
+    total: entries.length,
+    byKind,
+    byStatus,
+    latest: matched.at(-1) ?? null,
+    malformed,
+  }
+}
+
 function render(value) {
   if (value.action === 'record') {
     return `Recorded ${value.entry.kind} evidence (${value.entry.status}): ${value.entry.claim}`
+  }
+  if (value.action === 'summary') {
+    const kinds = Object.entries(value.byKind).filter(([, count]) => count > 0).map(([kind, count]) => `${kind}=${count}`)
+    const statuses = Object.entries(value.byStatus).filter(([, count]) => count > 0).map(([status, count]) => `${status}=${count}`)
+    const lines = [`Evidence ledger summary: ${value.count} matching entr${value.count === 1 ? 'y' : 'ies'} from ${value.path}`]
+    lines.push(`- by kind: ${kinds.length ? kinds.join(', ') : 'none'}`)
+    lines.push(`- by status: ${statuses.length ? statuses.join(', ') : 'none'}`)
+    if (value.latest) lines.push(`- latest: [${value.latest.status}] ${value.latest.claim}`)
+    if (value.malformed.length > 0) lines.push(`Warning: skipped ${value.malformed.length} malformed line(s).`)
+    return lines.join('\n')
   }
   const lines = [`Evidence ledger: ${value.count} result(s) from ${value.path}`]
   for (const entry of value.entries) {
@@ -189,15 +228,15 @@ export function apply(ctx, config) {
   const filePath = resolveLedgerPath(config.path)
   ctx.effect(() => ctx.tools.register({
     name: 'evidence_ledger',
-    description: 'Record or search local, append-only evidence for facts, tests, decisions, failures, and pending claims. Use observed or verified only when the evidence is actually available; do not turn assumptions into facts.',
+    description: 'Record, search, or summarize local append-only evidence for facts, tests, decisions, failures, and pending claims. Use observed or verified only when the evidence is actually available; do not turn assumptions into facts.',
     parameters: {
       type: 'object',
       additionalProperties: false,
       properties: {
         action: {
           type: 'string',
-          enum: ['record', 'list'],
-          description: 'record a new entry or list existing entries',
+          enum: ACTIONS,
+          description: 'record a new entry, list existing entries, or summarize matching entries',
         },
         kind: {
           type: 'string',
@@ -228,6 +267,9 @@ export function apply(ctx, config) {
           path: { type: 'string' },
           count: { type: 'number' },
           total: { type: 'number' },
+          byKind: { type: 'object', additionalProperties: true },
+          byStatus: { type: 'object', additionalProperties: true },
+          latest: { type: 'object', additionalProperties: true },
           entry: { type: 'object', additionalProperties: true },
           entries: { type: 'array', items: { type: 'object', additionalProperties: true } },
           malformed: { type: 'array', items: { type: 'object', additionalProperties: true } },
@@ -238,12 +280,14 @@ export function apply(ctx, config) {
     async execute(args) {
       if (args.action === 'record') return record(filePath, args)
       if (args.action === 'list') return list(filePath, args, config.maxResults)
-      throw new Error('action must be either record or list')
+      if (args.action === 'summary') return summary(filePath, args)
+      throw new Error(`action must be one of: ${ACTIONS.join(', ')}`)
     },
   }), 'evidence-ledger.tools()')
 }
 
 export const __private__ = {
+  ACTIONS,
   KINDS,
   STATUSES,
   resolveLedgerPath,

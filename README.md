@@ -50,11 +50,22 @@ dsh plugin --profile demo add github:Freakz2z/dsh-evidence-ledger
 }
 ```
 
+需要快速查看账本分布时，可以使用 `summary`：
+
+```json
+{
+  "action": "summary",
+  "status": "verified"
+}
+```
+
 支持的 `kind`：`fact`、`test`、`decision`、`failure`、`note`。
 
 支持的 `status`：`observed`、`verified`、`rejected`、`pending`。
 
 `list` 的 `kind`、`status` 和 `tag` 是精确筛选；`query` 仍会在声明、证据、来源和标签中进行不区分大小写的全文搜索。
+
+`summary` 使用相同的筛选条件，返回匹配记录总数、按 `kind` 与 `status` 聚合的数量，以及最新一条匹配记录。
 
 记录内容应区分“已经看到的证据”和“尚未验证的判断”。插件不会替 agent 判断一条声明是否真实，只负责保存原始记录并提供可检索的来源指针。
 

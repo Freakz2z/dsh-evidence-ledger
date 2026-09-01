@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0 - 2026-09-01
+
+- Add a read-only `summary` action with kind/status counts and the latest matching entry.
+- Reuse the same query, kind, status, and tag filters across list and summary operations.
+
 ## 0.1.1 - 2026-08-24
 
 - Add exact `kind`, `status`, and `tag` filters to `evidence_ledger` list queries.
